@@ -359,6 +359,7 @@ class MockDatabase {
           rating: 4.8,
           reviews: 12,
         },
+        watchlist: ['3', '5'],
         createdAt: new Date('2024-01-01'),
         updatedAt: new Date('2024-01-20'),
       },
@@ -372,34 +373,34 @@ class MockDatabase {
   // Asset methods
   getAllAssets(filters = {}) {
     let assets = Array.from(this.assets.values());
-    
+
     if (filters.category) {
       assets = assets.filter(asset => asset.category === filters.category);
     }
-    
+
     if (filters.status) {
       assets = assets.filter(asset => asset.status === filters.status);
     }
-    
+
     if (filters.verified !== undefined) {
       assets = assets.filter(asset => asset.isVerified === filters.verified);
     }
-    
+
     if (filters.priceRange) {
-      assets = assets.filter(asset => 
-        asset.price.amount >= filters.priceRange.min && 
+      assets = assets.filter(asset =>
+        asset.price.amount >= filters.priceRange.min &&
         asset.price.amount <= filters.priceRange.max
       );
     }
-    
+
     if (filters.searchTerm) {
       const term = filters.searchTerm.toLowerCase();
-      assets = assets.filter(asset => 
+      assets = assets.filter(asset =>
         asset.title.toLowerCase().includes(term) ||
         asset.description.toLowerCase().includes(term)
       );
     }
-    
+
     return assets;
   }
 
@@ -436,7 +437,7 @@ class MockDatabase {
   updateAsset(id, updateData) {
     const asset = this.assets.get(id);
     if (!asset) return null;
-    
+
     const updatedAsset = {
       ...asset,
       ...updateData,
@@ -449,25 +450,25 @@ class MockDatabase {
   // Validator methods
   getAllValidators(filters = {}) {
     let validators = Array.from(this.validators.values());
-    
+
     if (filters.expertise) {
-      validators = validators.filter(validator => 
+      validators = validators.filter(validator =>
         validator.expertise.includes(filters.expertise)
       );
     }
-    
+
     if (filters.jurisdiction) {
-      validators = validators.filter(validator => 
+      validators = validators.filter(validator =>
         validator.jurisdiction.toLowerCase().includes(filters.jurisdiction.toLowerCase())
       );
     }
-    
+
     if (filters.availability !== undefined) {
-      validators = validators.filter(validator => 
+      validators = validators.filter(validator =>
         validator.availability === filters.availability
       );
     }
-    
+
     return validators;
   }
 
@@ -514,7 +515,7 @@ class MockDatabase {
   updateValidationRequest(id, updateData) {
     const request = this.validationRequests.get(id);
     if (!request) return null;
-    
+
     const updatedRequest = {
       ...request,
       ...updateData,
@@ -522,6 +523,30 @@ class MockDatabase {
     };
     this.validationRequests.set(id, updatedRequest);
     return updatedRequest;
+  }
+
+  getUserWatchlist(id) {
+    const user = this.users.get(id);
+    if (!user) return null;
+    if (!user.watchlist.length) return [];
+    let assets = Array.from(this.assets.values());
+    return assets.filter(asset => user.watchlist.includes(asset.id));
+  }
+
+  addWatchlist(userId, assetId) {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    if (!user.watchlist.includes(assetId)) {
+      user.watchlist.push(assetId);
+    }
+    return user.watchlist;
+  }
+
+  removeFromWatchlist(userId, assetId) {
+    const user = this.users.get(userId);
+    if (!user) return null;
+    user.watchlist = user.watchlist.filter(asset => asset !== assetId);
+    return user.watchlist;
   }
 }
 
